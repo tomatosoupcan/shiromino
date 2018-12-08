@@ -13,6 +13,7 @@
 #include "piecedef.h"
 #include "qrs.h"
 #include "timer.h"
+#include "debug.h"
 
 /*
 int gfx_piece_colors[25] =
@@ -517,7 +518,7 @@ int gfx_drawanimations(coreState *cs, int type)
         int framenum = a->counter / a->frame_multiplier;
         t = (a->first_frame + framenum)->tex;
         if(!t)
-            printf("NULL texture on frame %d\n", framenum);
+            log_debug("NULL texture on frame %d\n", framenum);
 
         dest.x = a->x;
         dest.y = a->y;
@@ -704,7 +705,7 @@ int gfx_drawqrsfield(coreState *cs, grid_t *field, unsigned int mode, unsigned i
     SDL_Texture *tets = cs->assets->tets_dark_qs.tex;
     SDL_Texture *misc = cs->assets->misc.tex;
 
-    SDL_Rect tdest = {.x = x, .y = y - 48, .w = 274, .h = 416};
+    SDL_Rect tdest = {.x = x, .y = y - 48, .w = 288, .h = 416};
     SDL_Rect src = {.x = 0, .y = 0, .w = 16, .h = 16};
     SDL_Rect dest = {.x = 0, .y = 0, .w = 16, .h = 16};
 

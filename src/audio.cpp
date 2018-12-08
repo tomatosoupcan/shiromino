@@ -9,6 +9,7 @@
 
 #include "core.h"
 #include "audio.h"
+#include "debug.h"
 
 static void play_track(coreState *cs, Mix_Music *m, int volume)
 {
@@ -27,7 +28,7 @@ static void play_sfx(Mix_Chunk *c, int volume)
     // Mix_VolumeChunk(c, lrintf(((float)(nz->settings->sfx_volume) / 100.0) * 128.0));
     Mix_VolumeChunk(c, volume);
     if(Mix_PlayChannel(-1, c, 0) < 0)
-        printf("Mix_PlayChannel() error: %s\n", Mix_GetError());
+        log_err("Mix_PlayChannel() error: %s\n", Mix_GetError());
 }
 
 bool music_load(struct music *m, const char *path_without_ext)

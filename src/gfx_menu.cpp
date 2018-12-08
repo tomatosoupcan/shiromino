@@ -9,6 +9,8 @@
 #include "gfx.h"
 #include "gfx_menu.h"
 
+#include "debug.h"
+
 int gfx_drawmenu(game_t *g)
 {
     if(!g)
@@ -71,23 +73,23 @@ int gfx_drawmenu(game_t *g)
     if(d->title)
         gfx_drawtext(cs, d->title, d->x, d->y, monofont_square, NULL);
 
-    if(d->use_target_tex)
+    /*if(d->use_target_tex)
     {
         SDL_SetRenderTarget(cs->screen.renderer, d->target_tex);
-    }
+    }*/
 
     for(i = initial_opt; i <= final_opt; i++)
     {
         if(d->menu[i])
         {
             m = d->menu[i];
-            if(d->use_target_tex && !m->render_update)
+            /*if(d->use_target_tex && !m->render_update)
                 continue;
             else if(d->use_target_tex && i == initial_opt)
             {
                 SDL_SetRenderDrawColor(g->origin->screen.renderer, 0, 0, 0, 0);
                 SDL_RenderClear(g->origin->screen.renderer);
-            }
+            }*/
 
             fmt = text_fmt_create(m->label_text_flags, m->label_text_rgba, RGBA_OUTLINE_DEFAULT);
             monofont = monofont_square;
@@ -225,7 +227,7 @@ int gfx_drawmenu(game_t *g)
                                 dest.x = m->value_x + (m->value_text_flags & DRAWTEXT_THIN_FONT ? 13 : 16) * (k)-1;
 
                                 if(SDL_RenderCopy(cs->screen.renderer, font, &src, &dest))
-                                    printf("%s\n", SDL_GetError());
+                                    log_err("%s\n", SDL_GetError());
                             }
 
                             src.h = 16;
@@ -358,7 +360,7 @@ int gfx_drawmenu(game_t *g)
     SDL_SetRenderTarget(cs->screen.renderer, NULL);
     SDL_SetRenderDrawColor(cs->screen.renderer, 0, 0, 0, 255);
 
-    if(d->use_target_tex)
+    /*if(d->use_target_tex)
     {
         for(i = 0; i < d->numopts; i++)
         {
@@ -366,7 +368,7 @@ int gfx_drawmenu(game_t *g)
         }
 
         SDL_RenderCopy(cs->screen.renderer, d->target_tex, NULL, NULL);
-    }
+    }*/
 
     return 0;
 }

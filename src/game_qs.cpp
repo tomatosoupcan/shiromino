@@ -1,4 +1,4 @@
-#include "zed_dbg.h"
+#include "debug.h"
 #include <SDL2/SDL.h>
 #include <math.h>
 #include <stdint.h>
@@ -448,7 +448,7 @@ static void play_or_halt_music(qrsdata *q, coreState *cs, struct music *first_mu
         return;
 
     q->music = desired_music;
-    printf("music: %d\n", q->music);
+    log_debug("music: %d\n", q->music);
     if(desired_music == -1)
         Mix_HaltMusic();
     else
@@ -481,7 +481,7 @@ static void update_music(qrsdata *q, coreState *cs)
             break;
 
         default:
-            log_warn("qrsdata->mode_type improperly set to %d\n", q->mode_type);
+            log_debug("qrsdata->mode_type improperly set to %d\n", q->mode_type);
             break;
     }
 }
@@ -930,7 +930,7 @@ int qs_game_init(game_t *g)
         q->randomizer_seed = *(qrand->seedp);
     }
 
-    printf("Random seed: %ld\n", q->randomizer_seed);
+    log_debug("Random seed: %ld\n", q->randomizer_seed);
 
     if(qrand)
     {
@@ -3379,7 +3379,7 @@ int qs_initnext(game_t *g, qrs_player *p, unsigned int flags)
 
         if(gems_in_field == false)
         {
-            printf("No gems left, terminating.\n");
+            log_info("No gems left, terminating.\n");
             return QSGAME_SHOULD_TERMINATE;
         }
     }

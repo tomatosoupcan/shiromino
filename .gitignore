@@ -25,6 +25,20 @@ game
 obj/
 bin/
 
+shiromino
+*.self
+*.velf
+*.vpk
+*.sfo
+Makefile
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+build-debug/
+build-release/
+cmake-build-Debug/
+cmake-build-Release/
+
 # Packages #
 ############
 *.7z
@@ -35,6 +49,12 @@ bin/
 *.rar
 *.tar
 *.zip
+
+# IDE files #
+#############
+.codelite/
+shiromino-vita.project
+shiromino.workspace
 
 # OS generated files #
 ######################

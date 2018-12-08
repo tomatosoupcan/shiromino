@@ -128,8 +128,8 @@ typedef struct
         int selection;
     } practice_menu_data;
 
-    SDL_Texture *target_tex;
-    int use_target_tex;
+    //SDL_Texture *target_tex;
+    //int use_target_tex;
     int numopts;
     int selection;
 

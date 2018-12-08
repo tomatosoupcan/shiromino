@@ -18,6 +18,7 @@
 #include "gfx_menu.h"
 #include "qrs.h"
 #include "replay.h"
+#include "debug.h"
 
 struct menu_opt *std_game_multiopt_create(coreState *cs, unsigned int mode, int num_sections, bstring label)
 {
@@ -526,7 +527,7 @@ game_t *menu_create(coreState *cs)
     g->data = (menudata *)malloc(sizeof(menudata));
     menudata *d = (menudata *)(g->data);
 
-    d->target_tex = SDL_CreateTexture(cs->screen.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 640, 480);
+    //d->target_tex = SDL_CreateTexture(cs->screen.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 640, 480);
     d->menu = NULL;
     d->menu_id = -1;
     d->main_menu_data.selection = 0;
@@ -553,12 +554,12 @@ int menu_init(game_t *g)
         return -1;
 
     if(mload_main(g, 0))
-        printf("Failed to load main menu\n");
+        log_err("Failed to load main menu\n");
 
     menudata *d = (menudata *)g->data;
 
-    SDL_SetRenderTarget(g->origin->screen.renderer, d->target_tex);
-    SDL_SetTextureBlendMode(d->target_tex, SDL_BLENDMODE_BLEND);
+    //SDL_SetRenderTarget(g->origin->screen.renderer, d->target_tex);
+    //SDL_SetTextureBlendMode(d->target_tex, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(g->origin->screen.renderer, 0, 0, 0, 0);
     SDL_RenderClear(g->origin->screen.renderer);
     SDL_SetRenderDrawColor(g->origin->screen.renderer, 0, 0, 0, 255);
@@ -782,13 +783,13 @@ int menu_input(game_t *g)
         }
     }
 
-    if(update && d->use_target_tex)
+    /*if(update && d->use_target_tex)
     {
         for(i = 0; i < d->numopts; i++)
         {
             d->menu[i]->render_update = 1;
         }
-    }
+    }*/
 
     if(d->menu_id == MENU_ID_MAIN)
         d->main_menu_data.selection = d->selection;
@@ -823,7 +824,7 @@ int menu_input(game_t *g)
                 {
                     if(d1->action(g, d1->val))
                     {
-                        printf("Received quit signal, shutting down.\n");
+                        log_info("Received quit signal, shutting down.\n");
                         return 1;
                     }
 
@@ -1019,8 +1020,8 @@ int menu_clear(game_t *g)
         return -1;
 
     menudata *d = (menudata *)(g->data);
-    SDL_SetRenderTarget(g->origin->screen.renderer, d->target_tex);
-    SDL_SetTextureBlendMode(d->target_tex, SDL_BLENDMODE_BLEND);
+    //SDL_SetRenderTarget(g->origin->screen.renderer, d->target_tex);
+    //SDL_SetTextureBlendMode(d->target_tex, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(g->origin->screen.renderer, 0, 0, 0, 0);
     SDL_RenderClear(g->origin->screen.renderer);
     SDL_SetRenderDrawColor(g->origin->screen.renderer, 0, 0, 0, 255);
@@ -1038,7 +1039,7 @@ int menu_clear(game_t *g)
     }
 
     d->menu = NULL;
-    d->use_target_tex = 0;
+    //d->use_target_tex = 0;
 
     if(d->title)
         bdestroy(d->title);
@@ -1086,7 +1087,7 @@ int mload_main(game_t *g, int val)
 
     d->menu = (struct menu_opt **)malloc(13 * sizeof(struct menu_opt *));
     d->menu_id = MENU_ID_MAIN;
-    d->use_target_tex = 0;
+    //d->use_target_tex = 0;
     d->selection = d->main_menu_data.selection;
     d->numopts = 13;
     d->title = bfromcstr("MAIN MENU");
@@ -1858,7 +1859,7 @@ int mload_replay(game_t *g, int val)
 
     d->menu = NULL;
     d->menu_id = MENU_ID_REPLAY;
-    d->use_target_tex = 1;
+    //d->use_target_tex = 1;
     d->selection = 0;
     d->numopts = 0;
     d->title = bfromcstr("REPLAY");

@@ -104,4 +104,6 @@ int gfx_drawtext_partial(coreState *cs, bstring text, int pos, int len, int x, i
 int gfx_drawpiece(coreState *cs, grid_t *field, int field_x, int field_y, piecedef *pd, unsigned int flags, int orient, int x, int y, Uint32 rgba);
 int gfx_drawtimer(coreState *cs, nz_timer *t, int x, Uint32 rgba);
 
+int SDL_RenderCopyVita(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Rect* srcrect, const SDL_Rect* dstrect);
+
 #endif

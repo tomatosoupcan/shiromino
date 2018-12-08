@@ -1,6 +1,6 @@
 #include "core.h"
 
-#include "zed_dbg.h"
+#include "debug.h"
 #include "file_io.h"
 #include "gfx.h"
 #include "gfx_structures.h"
@@ -25,30 +25,16 @@ using namespace std;
 
 BindableVariables bindables;
 
-#if(defined(_WIN64) || defined(_WIN32)) && !defined(__CYGWIN__) && !defined(__CYGWIN32__) && !defined(__MINGW32__) && \
-    !defined(__MINGW64__)
-#include <direct.h>
-#define chdir _chdir
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
+#include <psp2/kernel/threadmgr.h>
 int nanosleep(struct timespec *t, void *unused)
 {
-    LARGE_INTEGER ft = {.QuadPart = -(t->tv_nsec / 100)};
-
-    const HANDLE timer = CreateWaitableTimer(NULL, TRUE, NULL);
-    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
-    WaitForSingleObject(timer, INFINITE);
-    CloseHandle(timer);
-
+    sceKernelDelayThread((t->tv_sec * 1000000000 + t->tv_nsec) / 1000);
     return 0;
 }
-#else
+
 #include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h> // For chdir
-#endif
+//#include <unistd.h> // For chdir
 
 static long framedelay(Uint64 ticks_elap, double fps)
 {
@@ -66,7 +52,7 @@ static long framedelay(Uint64 ticks_elap, double fps)
         if(nanosleep(&t, NULL))
         {
             // this can happen when the user presses Ctrl+C
-            printf("Error: nanosleep() returned failure during frame length calculation\n");
+            log_err("Error: nanosleep() returned failure during frame length calculation\n");
             return FRAMEDELAY_ERR;
         }
     }
@@ -161,9 +147,9 @@ gfx_animation *load_anim_bg(coreState *cs, const char *directory, int frame_mult
     a->rgba_mod = RGBA_DEFAULT;
 
     struct stat s;
-    chdir("gfx");
+    //chdir("gfx");
     int err = stat(directory, &s);
-    chdir("..");
+    //chdir("..");
 
     if(-1 == err)
     {
@@ -250,8 +236,8 @@ void coreState_initialize(coreState *cs)
     cs->mouse_right_down = 0;
 
     cs->screen.name = "Shiromino v.beta2";
-    cs->screen.w = 640;
-    cs->screen.h = 480;
+    cs->screen.w = 960;
+    cs->screen.h = 544;
     cs->screen.window = NULL;
     cs->screen.renderer = NULL;
     // cs->screen.target_tex = NULL;
@@ -317,7 +303,7 @@ static void load_image(coreState *cs, gfx_image *img, const char *filename)
     string path = make_path(cs->settings->home_path, "gfx", filename, "");
     if(!img_load(img, (const char *)path.c_str(), cs))
     {
-        log_warn("Failed to load image '%s'", filename);
+        log_debug("Failed to load image '%s'\n", filename);
     }
 }
 
@@ -343,7 +329,7 @@ static void load_sfx(coreState *cs, struct sfx *s, const char *filename)
     string path = make_path(cs->settings->home_path, "audio", filename, "");
     if(!sfx_load( s, (const char *)path.c_str() ))
     {
-        log_warn("Failed to load sfx '%s'", filename);
+        log_debug("Failed to load sfx '%s'\n", filename);
     }
 
     s->volume = load_asset_volume(cs, filename);
@@ -354,7 +340,7 @@ static void load_music(coreState *cs, struct music *m, const char *filename)
     string path = make_path(cs->settings->home_path, "audio", filename, "");
     if(!music_load( m, (const char *)path.c_str() ))
     {
-        log_warn("Failed to load music '%s'", filename);
+        log_debug("Failed to load music '%s'\n", filename);
     }
 
     m->volume = load_asset_volume(cs, filename);
@@ -446,9 +432,9 @@ int init(coreState *cs, struct settings *s)
                     strcpy(cs->settings->home_path, s->home_path);
                 }
 
-                printf("Home path is: %s\n", cs->settings->home_path);
-                if(chdir(cs->settings->home_path) < 0) // chdir so relative paths later on make sense
-                    log_err("chdir() returned failure");
+                log_info("Home path is: %s\n", cs->settings->home_path);
+                //if(chdir(cs->settings->home_path) < 0) // chdir so relative paths later on make sense
+                //    log_err("chdir() returned failure\n");
             }
             else
                 cs->settings->home_path = NULL;
@@ -476,40 +462,40 @@ int init(coreState *cs, struct settings *s)
 
             if(cs->joystick)
             {
-                printf("Opened Joystick 0\n");
-                printf("Name: %s\n", SDL_JoystickNameForIndex(0));
-                printf("Number of Axes: %d\n", SDL_JoystickNumAxes(cs->joystick));
-                printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(cs->joystick));
-                printf("Number of Balls: %d\n", SDL_JoystickNumBalls(cs->joystick));
+                log_debug("Opened Joystick 0\n");
+                log_debug("Name: %s\n", SDL_JoystickNameForIndex(0));
+                log_debug("Number of Axes: %d\n", SDL_JoystickNumAxes(cs->joystick));
+                log_debug("Number of Buttons: %d\n", SDL_JoystickNumButtons(cs->joystick));
+                log_debug("Number of Balls: %d\n", SDL_JoystickNumBalls(cs->joystick));
             }
             else
             {
-                printf("Couldn't open Joystick 0\n");
+                log_err("Couldn't open Joystick 0\n");
             }
         }
 
-        cs->screen.w = cs->settings->video_scale * 640;
-        cs->screen.h = cs->settings->video_scale * 480;
+        cs->screen.w = cs->settings->video_scale * 960;
+        cs->screen.h = cs->settings->video_scale * 544;
         unsigned int w = cs->screen.w;
         unsigned int h = cs->screen.h;
         name = cs->screen.name;
 
-        int windowFlags = SDL_WINDOW_RESIZABLE;
+        int windowFlags = SDL_WINDOW_SHOWN;
 
-        cs->screen.window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, windowFlags);
+        cs->screen.window = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, windowFlags);
         check(cs->screen.window != NULL, "SDL_CreateWindow: Error: %s\n", SDL_GetError());
         cs->screen.renderer =
-            SDL_CreateRenderer(cs->screen.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+            SDL_CreateRenderer(cs->screen.window, -1, SDL_RENDERER_ACCELERATED);
         check(cs->screen.renderer != NULL, "SDL_CreateRenderer: Error: %s\n", SDL_GetError());
 
-        SDL_SetWindowMinimumSize(cs->screen.window, 640, 480);
+        //SDL_SetWindowMinimumSize(cs->screen.window, 640, 480);
         if(cs->settings->fullscreen)
         {
             SDL_SetWindowSize(cs->screen.window, 640, 480);
             SDL_SetWindowFullscreen(cs->screen.window, SDL_WINDOW_FULLSCREEN);
         }
 
-        SDL_RenderSetLogicalSize(cs->screen.renderer, 640, 480);
+        //SDL_RenderSetLogicalSize(cs->screen.renderer, 640, 480);
         if(!cs->settings->video_stretch)
         {
             SDL_RenderSetIntegerScale(cs->screen.renderer, SDL_TRUE);
@@ -518,6 +504,7 @@ int init(coreState *cs, struct settings *s)
         check(load_files(cs) == 0, "load_files() returned failure\n");
 
         check(Gui_Init(cs->screen.renderer, NULL), "Gui_Init() returned failure\n");
+        
         check(gfx_init(cs) == 0, "gfx_init returned failure\n");
 
         cs->bg = cs->assets->bg_temp.tex;
@@ -534,7 +521,7 @@ int init(coreState *cs, struct settings *s)
         // check(SDL_RenderCopy(cs->screen.renderer, blank, NULL, NULL) > -1, "SDL_RenderCopy: Error: %s\n", SDL_GetError());
 
         // TODO: Configurable scores.db path
-        static const char scoredb_file[] = "scores.db";
+        static const char scoredb_file[] = "ux0:data/shiro.db";
         scoredb_init(&cs->scores, scoredb_file);
         scoredb_create_player(&cs->scores, &cs->player, cs->settings->player_name);
 
@@ -590,7 +577,7 @@ void quit(coreState *cs)
 
     if(cs->p1game)
     {
-        printf("quit(): Found leftover game struct, attempting ->quit\n");
+        log_debug("quit(): Found leftover game struct, attempting ->quit\n");
         cs->p1game->quit(cs->p1game);
         free(cs->p1game);
         cs->p1game = NULL;
@@ -807,7 +794,7 @@ int procevents(coreState *cs)
             case SDL_QUIT:
                 return 1;
 
-            case SDL_JOYAXISMOTION:
+            /*case SDL_JOYAXISMOTION:
                 k = &cs->keys_raw;
 
                 if(event.jaxis.which == 0)
@@ -850,9 +837,9 @@ int procevents(coreState *cs)
                     }
                 }
 
-                break;
+                break;*/
 
-            case SDL_JOYHATMOTION:
+            /*case SDL_JOYHATMOTION:
                 k = &cs->keys_raw;
 
                 if(event.jhat.which == 0)
@@ -889,41 +876,85 @@ int procevents(coreState *cs)
                     }
                 }
 
-                break;
+                break;*/
 
+            /* Vita mappings:
+             * Cross    - 2 - A
+             * Circle   - 1 - B
+             * Square   - 3
+             * Triangle - 0
+             * Up       - 8
+             * Down     - 6
+             * Left     - 7
+             * Right    - 9
+             * LTrig    - 4 - C
+             * RTrig    - 5 - D
+             * Select   - 10
+             * Start    - 11
+             */
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
                 k = &cs->keys_raw;
                 if(joy)
                 {
-                    rc = SDL_JoystickGetButton(joy, 0);
+                    rc = SDL_JoystickGetButton(joy, 2);
                     if(!rc)
                         k->a = 0;
                     if(rc && k->a == 0)
                         k->a = 1;
 
-                    rc = SDL_JoystickGetButton(joy, 3);
+                    rc = SDL_JoystickGetButton(joy, 1);
                     if(!rc)
                         k->b = 0;
                     if(rc && k->b == 0)
                         k->b = 1;
 
-                    rc = SDL_JoystickGetButton(joy, 5);
+                    rc = SDL_JoystickGetButton(joy, 4);
                     if(!rc)
                         k->c = 0;
                     if(rc && k->c == 0)
                         k->c = 1;
 
-                    rc = SDL_JoystickGetButton(joy, 1);
+                    rc = SDL_JoystickGetButton(joy, 5);
                     if(!rc)
                         k->d = 0;
                     if(rc && k->d == 0)
                         k->d = 1;
+
+                    rc = SDL_JoystickGetButton(joy, 8);
+                    if(!rc)
+                        k->up = 0;
+                    if(rc && k->up == 0)
+                        k->up = 1;
+
+                    rc = SDL_JoystickGetButton(joy, 6);
+                    if(!rc)
+                        k->down = 0;
+                    if(rc && k->down == 0)
+                        k->down = 1;
+
+                    rc = SDL_JoystickGetButton(joy, 7);
+                    if(!rc)
+                        k->left = 0;
+                    if(rc && k->left == 0)
+                        k->left = 1;
+
+                    rc = SDL_JoystickGetButton(joy, 9);
+                    if(!rc)
+                        k->right = 0;
+                    if(rc && k->right == 0)
+                        k->right = 1;
+
+                    rc = SDL_JoystickGetButton(joy, 11);
+                    if(!rc)
+                        k->escape = 0;
+                    if(rc && k->escape == 0)
+                        k->escape = 1;
                 }
 
                 break;
 
-            case SDL_KEYDOWN:
+            /*case SDL_KEYDOWN:
                 if(event.key.repeat)
                     break;
 
@@ -1250,7 +1281,7 @@ int procevents(coreState *cs)
                     cs->nine_pressed = 0;
                 }
 
-                break;
+                break;*/
 
             case SDL_TEXTINPUT:
                 if(cs->text_editing)

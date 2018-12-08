@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
-#include "zed_dbg.h"
+#include "debug.h"
 #include <SDL2/SDL.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -29,7 +29,7 @@ struct settings *parse_cfg(const char *filename)
 
     if(cfg_file_lines.empty())
     {
-        printf("Error splitting config file\n");
+        log_err("Error splitting config file\n");
     }
 
     string sfxvolume = "SFXVOLUME";
@@ -72,7 +72,7 @@ struct settings *parse_cfg(const char *filename)
     s->player_name = get_cfg_string(cfg_file_lines, player_name);
     if(s->player_name == NULL)
     {
-        log_info("Could not find %s setting in config file. Using default player name \"%s\"", player_name.c_str(), defaultsettings.player_name);
+        log_info("Could not find %s setting in config file. Using default player name \"%s\"\n", player_name.c_str(), defaultsettings.player_name);
         s->player_name = defaultsettings.player_name;
     }
 
@@ -234,7 +234,7 @@ struct bindings *get_cfg_bindings(vector<string>& lines)
                 }
                 else
                 {
-                    log_warn("Binding for %s is invalid, using default", keystrings[j].c_str());
+                    log_debug("Binding for %s is invalid, using default\n", keystrings[j].c_str());
                 }
             }
         }
