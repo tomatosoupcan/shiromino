@@ -12,3 +12,10 @@ To build, run `cmake CMakeLists.txt` and then `make`.
  * Bad usage of screen estate
  * PC specific dead code
  * Pointless config
+
+## Development notes
+ * SDL-Vita requires texture dimensions that divide by 8
+ * SDL-Vita doesn't support render-to-texture
+ * All paths need to be absolute, `chdir()` does nothing
+ * `ux0:data` is a good location for writeable files
+ * `ux0:app/TEAR0001` is bind mounted at `app0:` (might be read-only?)
