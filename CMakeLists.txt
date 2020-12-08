@@ -79,6 +79,7 @@ target_link_libraries(${SHORT_NAME}
   SceHid_stub
   SceNetCtl_stub
   SceSysmodule_stub
+  SceAppMgr_stub
 )
 
 vita_create_self(${SHORT_NAME}.self ${SHORT_NAME})
